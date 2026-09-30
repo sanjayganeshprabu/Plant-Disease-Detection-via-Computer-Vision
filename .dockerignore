@@ -1,0 +1,11 @@
+data/
+*.zip
+kaggle.json
+notebooks/
+docs/
+outputs/
+models/checkpoints/
+.git/
+__pycache__/
+.venv/
+venv/

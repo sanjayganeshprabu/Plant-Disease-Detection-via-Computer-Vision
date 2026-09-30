@@ -1,0 +1,10 @@
+[theme]
+base = "light"
+primaryColor = "#2F6B3A"            # leaf green
+backgroundColor = "#FAFBF7"
+secondaryBackgroundColor = "#E9F0E4"
+textColor = "#1D2A1F"
+font = "sans serif"
+
+[server]
+maxUploadSize = 10                  # MB

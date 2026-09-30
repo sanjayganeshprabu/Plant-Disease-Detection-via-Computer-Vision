@@ -1,0 +1,28 @@
+# --- Dataset (2.7 GB - never commit) ---
+data/
+*.zip
+
+# --- Secrets ---
+kaggle.json
+.kaggle/
+.env
+
+# --- Training artefacts ---
+models/checkpoints/
+*.h5
+!models/.gitkeep
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# --- Notebooks / editors / OS ---
+.ipynb_checkpoints/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

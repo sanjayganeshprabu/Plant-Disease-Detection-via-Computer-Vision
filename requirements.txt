@@ -1,0 +1,12 @@
+# Core ML
+tensorflow>=2.15,<3
+numpy
+pillow
+scikit-learn
+matplotlib
+
+# Dataset download
+kaggle
+
+# Web app
+streamlit>=1.30
