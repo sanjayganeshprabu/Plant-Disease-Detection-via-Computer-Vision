@@ -1,0 +1,9 @@
+{
+  "split": "/content/plant-disease-detection/data/valid",
+  "num_images": 17572,
+  "accuracy": 0.9656271340769406,
+  "precision_macro": 0.9657338908222013,
+  "recall_macro": 0.96547478465808,
+  "f1_macro": 0.9654875151010632,
+  "f1_weighted": 0.9655948639416729
+}
