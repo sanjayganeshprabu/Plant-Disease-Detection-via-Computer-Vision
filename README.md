@@ -1,403 +1,294 @@
-# Plant Disease Detection using CNN
+# 🌿 Plant Disease Detection using CNN
 
-A TensorFlow/Keras-based image classification project for detecting plant diseases from leaf images. The model classifies images into **38 plant/disease categories** and additionally reports whether a plant is **healthy or unhealthy**.
+A TensorFlow/Keras image classifier that identifies **38 plant/disease categories** from leaf photos and reports whether the plant is **healthy or unhealthy**. It ships with scripts for downloading data, training, evaluation and prediction, plus a **Streamlit web app** you can deploy.
 
-The workflow is implemented for **Google Colab** and uses the **New Plant Diseases Dataset (Augmented)** from Kaggle.
+Trained on the Kaggle **[New Plant Diseases Dataset (Augmented)](https://www.kaggle.com/datasets/vipoooool/new-plant-diseases-dataset)** (≈87k images, 14 crops).
 
-## Overview
+![Sample predictions](docs/images/prediction_grid.jpg)
 
-The project performs the following steps:
+---
 
-1. Imports the required Python libraries.
-2. Downloads the Kaggle plant disease dataset.
-3. Extracts and reorganizes the dataset into training, validation, and test directories.
-4. Loads and preprocesses images by resizing them to `128 × 128` pixels and scaling pixel values to `[0, 1]`.
-5. Builds a custom convolutional neural network (CNN).
-6. Trains the CNN with early stopping.
-7. Evaluates the model using accuracy, precision, recall, F1-score, and a confusion matrix.
-8. Saves the trained model.
-9. Provides a function for predicting the disease/health status of an individual leaf image.
-10. Generates a visualized prediction grid for sample test images.
+## Features
 
-## Dataset
+- **38-class disease classifier** – apple, blueberry, cherry, corn, grape, orange, peach, bell pepper, potato, raspberry, soybean, squash, strawberry and tomato.
+- **Healthy / unhealthy verdict** with confidence and top-3 alternatives.
+- **Two architectures** – the original custom CNN, or MobileNetV2 transfer learning (`--arch mobilenetv2`).
+- **Reproducible CLI pipeline** – `download_data.py → train.py → evaluate.py → predict.py`.
+- **Web app** – upload or photograph a leaf in the browser (`streamlit run app.py`).
+- **Deploy anywhere** – Streamlit Community Cloud, Hugging Face Spaces, or Docker.
 
-The project uses the Kaggle dataset:
+---
 
-**New Plant Diseases Dataset (Augmented)**  
-Kaggle: `vipoooool/new-plant-diseases-dataset`
-
-The downloaded archive is approximately **2.70 GB**.
-
-The dataset contains:
-
-- **70,295 training images**
-- **17,572 validation images**
-- **38 classes**
-
-The classes include healthy leaves as well as several diseases affecting apple, blueberry, cherry, corn, grape, orange, peach, pepper, potato, raspberry, soybean, squash, strawberry, and tomato plants.
-
-### Example classes
-
-- `Apple___Apple_scab`
-- `Apple___healthy`
-- `Corn_(maize)___Common_rust_`
-- `Grape___Black_rot`
-- `Potato___Late_blight`
-- `Tomato___Early_blight`
-- `Tomato___healthy`
-
-## Requirements
-
-The notebook is designed to run in Google Colab.
-
-Main dependencies include:
-
-- Python
-- TensorFlow / Keras
-- NumPy
-- Matplotlib
-- OpenCV
-- Scikit-learn
-
-The code also uses the Kaggle API to download the dataset.
-
-## Running the Project
-
-### 1. Open the notebook in Google Colab
-
-Upload/open the Python notebook in Google Colab.
-
-### 2. Configure Kaggle
-
-The original notebook uploads a `kaggle.json` file manually and places it in:
+## Project structure
 
 ```text
-~/.kaggle/kaggle.json
-```
-
-Make sure your Kaggle credentials are configured securely. **Do not commit `kaggle.json` or any Kaggle API key to GitHub.**
-
-### 3. Download the dataset
-
-The notebook downloads:
-
-```text
-vipoooool/new-plant-diseases-dataset
-```
-
-and saves the resulting archive as:
-
-```text
-new-plant-diseases-dataset.zip
-```
-
-### 4. Extract and organize the dataset
-
-The dataset is extracted into:
-
-```text
-plant_disease_data/
-```
-
-The notebook locates the nested dataset directory and moves the relevant folders to:
-
-```text
-/content/train
-/content/valid
-/content/test
-```
-
-The training and validation generators use the directory structure to infer class labels.
-
-### 5. Image preprocessing
-
-Images are resized to:
-
-```text
-128 × 128 × 3
-```
-
-Pixel values are normalized using:
-
-```python
-rescale=1./255
-```
-
-A batch size of:
-
-```text
-32
-```
-
-is used.
-
-The project uses categorical labels because this is a multi-class classification problem.
-
-## CNN Architecture
-
-The model is a custom sequential CNN with three convolutional blocks:
-
-```text
-Input: 128 × 128 × 3
-
-Conv2D: 32 filters, 3 × 3, ReLU
-MaxPooling2D: 2 × 2
-
-Conv2D: 64 filters, 3 × 3, ReLU
-MaxPooling2D: 2 × 2
-
-Conv2D: 128 filters, 3 × 3, ReLU
-MaxPooling2D: 2 × 2
-
-Flatten
-
-Dense: 128, ReLU
-Dropout: 0.5
-
-Dense: 38, Softmax
-```
-
-The model is compiled using:
-
-- **Optimizer:** Adam
-- **Loss:** Categorical cross-entropy
-- **Metric:** Accuracy
-
-## Training
-
-The model is configured to train for up to **20 epochs**.
-
-Early stopping is applied using validation loss:
-
-```python
-EarlyStopping(
-    monitor="val_loss",
-    patience=3,
-    restore_best_weights=True
-)
-```
-
-This allows training to stop when validation performance stops improving and restores the best model weights observed during training.
-
-### Training results
-
-The recorded training run reached:
-
-| Epoch | Training Accuracy | Validation Accuracy |
-|------:|------------------:|--------------------:|
-| 1 | 91.26% | 90.90% |
-| 2 | 91.88% | 90.09% |
-| 3 | 92.19% | 88.58% |
-| 4 | 92.81% | 90.87% |
-
-The notebook ultimately reports:
-
-- **Training Accuracy:** 99.11%
-- **Test/Validation Accuracy:** 90.90%
-- **Macro Precision:** 91.11%
-- **Macro Recall:** 90.89%
-
-The classification report gives an overall:
-
-- **Accuracy:** 89%
-- **Macro-average F1-score:** 0.89
-- **Weighted-average F1-score:** 0.89
-
-> Note: the notebook uses the directory named `valid` for the generator called `test_gen`. Therefore, references to "test accuracy" in the notebook correspond to this validation/test split used during evaluation.
-
-## Evaluation
-
-The project evaluates the classifier using:
-
-### Confusion Matrix
-
-A confusion matrix is generated with:
-
-```python
-confusion_matrix(true_labels, pred_labels)
-```
-
-and displayed using `ConfusionMatrixDisplay`.
-
-### Classification Report
-
-Scikit-learn's `classification_report` is used to obtain:
-
-- Precision
-- Recall
-- F1-score
-- Support
-
-for each of the 38 classes.
-
-### Overall metrics
-
-The notebook also calculates:
-
-```text
-Train Accuracy
-Test Accuracy
-Precision
-Recall
-```
-
-using the corresponding Scikit-learn and Keras evaluation functions.
-
-## Plant Health Prediction
-
-The function:
-
-```python
-predict_plant_health(img_path)
-```
-
-takes an image path, preprocesses the image, runs inference through the trained CNN, and identifies the predicted class.
-
-The logic then checks whether `"healthy"` appears in the predicted class name.
-
-For example:
-
-```text
-Plant is Healthy
-```
-
-or:
-
-```text
-Plant is Unhealthy — Disease: Late_blight
-```
-
-This makes the classifier useful both as a **disease identification model** and as a simple **healthy/unhealthy detector**.
-
-## Example Predictions
-
-The notebook demonstrates predictions such as:
-
-```text
-Late_blight
-Tomato_Yellow_Leaf_Curl_Virus
-Early_blight
-Cedar_apple_rust
-Bacterial_spot
-Spider_mites Two-spotted_spider_mite
-Septoria_leaf_spot
-Common_rust_
-```
-
-It also identifies some samples as healthy.
-
-## Visualization
-
-The project creates:
-
-- Training vs. validation loss plots
-- Training vs. validation accuracy plots
-- A confusion matrix
-- A grid of test images with predicted labels
-
-For the final visualization, unhealthy images are given a red overlay while healthy images are displayed without the disease overlay.
-
-## Saved Model
-
-The trained model is saved as:
-
-```text
-plant_disease_model.h5
-```
-
-The notebook reports a warning that the HDF5 format is considered a legacy Keras format. A newer implementation can instead save the model using:
-
-```python
-model.save("plant_disease_model.keras")
-```
-
-## Project Structure
-
-A simplified view of the working directory is:
-
-```text
-project/
-│
-├── train/
-│   ├── Apple___Apple_scab/
-│   ├── Apple___healthy/
-│   ├── ...
-│
-├── valid/
-│   ├── Apple___Apple_scab/
-│   ├── Apple___healthy/
-│   ├── ...
-│
-├── test/
-│   ├── sample images
-│   └── ...
-│
-├── new-plant-diseases-dataset.zip
-├── plant_disease_model.h5
+plant-disease-detection/
+├── app.py                  # Streamlit web app
+├── download_data.py        # download + organise the Kaggle dataset
+├── train.py                # train the model
+├── evaluate.py             # metrics, classification report, confusion matrix
+├── predict.py              # predict on images / folders from the command line
+├── plant_disease/          # reusable library code
+│   ├── config.py           #   paths & hyperparameters
+│   ├── data.py             #   dataset download / extraction / tf.data loaders
+│   ├── model.py            #   CNN + MobileNetV2 architectures
+│   ├── inference.py        #   PlantDiseasePredictor + label parsing
+│   └── plots.py            #   training curves, confusion matrix, prediction grid
+├── models/                 # trained model + class_names.json (created by train.py)
+├── outputs/                # plots, reports, metrics (created by the scripts)
+├── notebooks/              # original Colab notebook (for reference)
+├── docs/images/            # figures used in this README
+├── .streamlit/config.toml  # app theme
+├── requirements.txt
+├── Dockerfile
 └── README.md
 ```
 
-## Technologies Used
+`data/` (the 2.7 GB dataset) is created by `download_data.py` and is git-ignored.
 
-| Technology | Purpose |
+---
+
+## Quick start
+
+### 1. Clone and install
+
+```bash
+git clone https://github.com/<your-username>/plant-disease-detection.git
+cd plant-disease-detection
+
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+Python 3.10–3.12 is recommended.
+
+### 2. Set up Kaggle credentials
+
+Create an API token at **kaggle.com → Settings → API → Create New Token**. This downloads `kaggle.json`. Then either:
+
+```bash
+# macOS / Linux
+mkdir -p ~/.kaggle && mv ~/Downloads/kaggle.json ~/.kaggle/ && chmod 600 ~/.kaggle/kaggle.json
+```
+
+On Windows, put it in `C:\Users\<you>\.kaggle\kaggle.json`. Alternatively, set the environment variables `KAGGLE_USERNAME` and `KAGGLE_KEY`.
+
+> ⚠️ Never commit `kaggle.json` or your API key. It is already listed in `.gitignore`.
+
+### 3. Download the dataset
+
+```bash
+python download_data.py            # ~2.7 GB download, then extracts into data/
+python download_data.py --cleanup  # same, but deletes the zip afterwards to save space
+```
+
+Already downloaded the zip in your browser? Use `python download_data.py --zip path/to/new-plant-diseases-dataset.zip`.
+
+Result:
+
+```text
+data/train/   70,295 images in 38 class folders
+data/valid/   17,572 images in 38 class folders
+data/test/    33 unlabelled sample images
+```
+
+### 4. Train
+
+```bash
+python train.py                               # original CNN (default settings)
+python train.py --augment                     # CNN + data augmentation
+python train.py --arch mobilenetv2 --augment  # transfer learning, usually more accurate
+```
+
+| Option | Default | Meaning |
+|---|---|---|
+| `--arch` | `cnn` | `cnn` or `mobilenetv2` |
+| `--epochs` | `20` | maximum epochs (early stopping usually ends sooner) |
+| `--batch-size` | `32` | batch size |
+| `--img-size` | `128` | input resolution (square) |
+| `--lr` | `0.001` | Adam learning rate |
+| `--patience` | `3` | early-stopping patience |
+| `--augment` | off | random flip / rotation / zoom / contrast |
+
+A GPU is strongly recommended; see [Training on Google Colab](#training-on-google-colab) if you don't have one. Training writes:
+
+```text
+models/plant_disease_model.keras   # the model (best epoch by validation loss)
+models/class_names.json            # label order - required for inference
+models/training_history.json
+outputs/training_curves.png
+outputs/training_log.csv
+```
+
+### 5. Evaluate
+
+```bash
+python evaluate.py                  # metrics on data/valid
+python evaluate.py --include-train  # also report training-set accuracy
+```
+
+Produces `outputs/metrics.json`, `outputs/classification_report.txt` and `outputs/confusion_matrix.png`.
+
+### 6. Predict
+
+```bash
+python predict.py path/to/leaf.jpg          # one image
+python predict.py img1.jpg img2.jpg folder/ # several images / folders
+python predict.py                           # all images in data/test
+python predict.py data/test --grid          # also save outputs/predictions_grid.png
+```
+
+Example output (illustrative):
+
+```text
+TomatoEarlyBlight1.JPG
+  ⚠️ Unhealthy Tomato leaf - Disease: Early blight (96.4%)
+      96.4%  Tomato - Early blight
+       2.1%  Tomato - Septoria leaf spot
+       0.8%  Potato - Early blight
+```
+
+Using it from your own Python code:
+
+```python
+from plant_disease.inference import PlantDiseasePredictor
+
+predictor = PlantDiseasePredictor.from_dir("models")
+result = predictor.predict("leaf.jpg")
+print(result.plant, result.condition, result.is_healthy, result.confidence)
+```
+
+### 7. Run the web app
+
+```bash
+streamlit run app.py
+```
+
+Open http://localhost:8501, then upload a leaf photo or use your camera.
+
+---
+
+## Training on Google Colab
+
+If you don't have a local GPU, train on Colab (**Runtime → Change runtime type → GPU**) and bring the model back:
+
+```python
+!git clone https://github.com/<your-username>/plant-disease-detection.git
+%cd plant-disease-detection
+
+# Upload kaggle.json
+from google.colab import files
+files.upload()
+!mkdir -p ~/.kaggle && mv kaggle.json ~/.kaggle/ && chmod 600 ~/.kaggle/kaggle.json
+
+!python download_data.py --cleanup
+!python train.py
+!python evaluate.py
+
+files.download("models/plant_disease_model.keras")
+files.download("models/class_names.json")
+files.download("models/training_history.json")
+```
+
+Put the downloaded files in your local `models/` folder. Colab already has TensorFlow and the Kaggle package installed, so no `pip install` is needed there.
+
+> Clear the output of the `files.upload()` cell before saving the notebook. Otherwise your Kaggle key is stored inside the `.ipynb`.
+
+---
+
+## Deployment
+
+The app needs `app.py`, the `plant_disease/` package, `requirements.txt` and a trained model in `models/` (`plant_disease_model.keras` + `class_names.json`). Commit the model files to your repo; the CNN model is roughly 40 MB, which is under GitHub's 100 MB file limit. For larger models use [Git LFS](https://git-lfs.com).
+
+### Streamlit Community Cloud (free, easiest)
+
+1. Push the repo, **including `models/`**, to GitHub.
+2. Go to [share.streamlit.io](https://share.streamlit.io) → **Create app** and pick your repo.
+3. Set **Main file path** to `app.py`. Under *Advanced settings*, choose Python 3.11.
+4. Click **Deploy**. You get a public URL once dependencies install.
+
+### Hugging Face Spaces
+
+Create a new Space with the **Docker** SDK and push this repo to it. The included `Dockerfile` serves the app on port 8501, so add `app_port: 8501` to the Space's README metadata.
+
+### Docker (any server)
+
+```bash
+docker build -t plant-disease-app .
+docker run -p 8501:8501 plant-disease-app
+```
+
+To serve a model stored elsewhere, set `PLANT_MODEL_DIR=/path/to/model/folder`.
+
+---
+
+## Model
+
+### CNN architecture (default)
+
+```text
+Input 128×128×3  →  Rescaling(1/255)
+Conv2D(32, 3×3, ReLU)  → MaxPool 2×2
+Conv2D(64, 3×3, ReLU)  → MaxPool 2×2
+Conv2D(128, 3×3, ReLU) → MaxPool 2×2
+Flatten → Dense(128, ReLU) → Dropout(0.5) → Dense(38, Softmax)
+```
+
+Optimiser: Adam; loss: categorical cross-entropy. Rescaling lives inside the model, so the saved model takes raw 0–255 images and preprocessing can't drift between training and inference.
+
+### Training setup
+
+- Training data shuffled each epoch; validation data kept in fixed order.
+- Early stopping on `val_loss` (patience 3); the best epoch is always the one saved.
+- Learning rate halved when validation loss plateaus.
+
+---
+
+## Results (original notebook run)
+
+| Metric | Value |
 |---|---|
-| Python | Programming language |
-| TensorFlow / Keras | CNN construction and training |
-| NumPy | Numerical operations |
-| Matplotlib | Visualization |
-| OpenCV | Image processing and visualization |
-| Scikit-learn | Model evaluation |
-| Kaggle API | Dataset download |
-| Google Colab | Development and execution environment |
+| Validation accuracy | 90.90 % |
+| Macro precision | 91.11 % |
+| Macro recall | 90.89 % |
+| Training-set accuracy | 99.11 % |
 
-## Results
+![Training curves](docs/images/training_curves.png)
 
-The custom CNN achieved approximately **91% test/validation accuracy** in the recorded run, with macro precision and recall both around **91%**.
+Per-class performance varies. Several classes exceed F1 = 0.95 (e.g. *Corn – Common rust* ≈ 0.99, *Grape – Leaf blight* ≈ 0.99), while visually similar tomato diseases are harder (*Tomato – Early blight* ≈ 0.69, *Late blight* ≈ 0.70, *Septoria leaf spot* ≈ 0.69).
 
-The per-class performance varies. Several classes achieved F1-scores above 0.95, while some tomato disease classes showed lower performance. For example:
+![Confusion matrix](docs/images/confusion_matrix.png)
 
-- `Corn_(maize)___Common_rust_`: F1 ≈ 0.99
-- `Grape___Leaf_blight_(Isariopsis_Leaf_Spot)`: F1 ≈ 0.99
-- `Tomato___Early_blight`: F1 ≈ 0.69
-- `Tomato___Late_blight`: F1 ≈ 0.70
-- `Tomato___Septoria_leaf_spot`: F1 ≈ 0.69
+These numbers come from the original notebook, which trained without shuffling. The refactored `train.py` shuffles training data and adds LR scheduling, so rerunning it will give different (typically better) results. Run `python evaluate.py` to get the numbers for your own model.
 
-This indicates that the model performs strongly for many categories but has difficulty distinguishing some visually similar diseases.
+---
 
 ## Limitations
 
-The current implementation has several practical limitations:
+- The dataset has no separate labelled test set, so `data/valid` is used both for early stopping and for the reported metrics. The figures are therefore slightly optimistic.
+- Images are lab-style close-ups on plain backgrounds (PlantVillage). Accuracy on field photos with clutter, different lighting or multiple leaves is likely lower.
+- The healthy/unhealthy verdict is derived from the predicted class name, not from a separate binary model.
+- The model only knows these 38 classes and will always pick one of them, even for a leaf from an unsupported plant.
 
-- It relies on a large augmented Kaggle dataset.
-- The model is a relatively simple custom CNN rather than a modern transfer-learning architecture.
-- The training and evaluation generators use `shuffle=False`.
-- The notebook uses the validation set as the main evaluation set.
-- The model can overfit: the recorded training accuracy reaches 99.11% while evaluation accuracy is around 90.90%.
-- The healthy/unhealthy decision is derived directly from the predicted class name rather than using a separate binary classifier.
-- The model has not been demonstrated to generalize to field images with different lighting, backgrounds, camera conditions, or disease severity.
+## Possible improvements
 
-## Possible Improvements
+- Fine-tune the MobileNetV2 base (unfreeze the top layers) or try EfficientNet.
+- Carve a proper held-out test set from the data.
+- Grad-CAM heatmaps to show which leaf regions drive each prediction.
+- An "unknown / not a leaf" rejection threshold.
+- Export to TensorFlow Lite for a mobile app.
 
-Potential improvements to the project include:
+---
 
-- Transfer learning with models such as MobileNet, EfficientNet, ResNet, or Xception.
-- Data augmentation during training.
-- Learning-rate scheduling.
-- Class balancing if required.
-- A dedicated held-out test set.
-- Grad-CAM or other explainability methods to visualize the leaf regions influencing predictions.
-- Deployment as a web or mobile application.
-- Saving class labels alongside the trained model for easier inference.
-- Using the native `.keras` format instead of `.h5`.
+## Tech stack
 
-## License and Dataset Attribution
+Python · TensorFlow / Keras · NumPy · scikit-learn · Matplotlib · Pillow · Streamlit · Kaggle API
 
-The dataset downloaded by the notebook is the **New Plant Diseases Dataset (Augmented)** from Kaggle and is attributed in the notebook as having a `copyright-authors` license.
+## Dataset & license
 
-Refer to the original Kaggle dataset page and its license terms before redistributing the dataset or using it in a public project.
+The dataset is the **New Plant Diseases Dataset (Augmented)** by *vipoooool* on Kaggle, itself derived from PlantVillage. Kaggle lists its license as `copyright-authors`, so it is **not** redistributed in this repository. Download it yourself and check the dataset page before any public or commercial use.
 
 ## Author
 
-**Sanjay**
-
-Plant Disease Detection using Convolutional Neural Networks.
+**Sanjay** – Plant Disease Detection using Convolutional Neural Networks.
